@@ -21,7 +21,7 @@ blueprint:
               device_class: power
     status_input_select:
       name: Status Helper
-      description: Input select helper to store the charger status (must have options: Idle, Charging, Complete)
+      description: "Input select helper to store the charger status (must have options: Idle, Charging, Complete)"
       selector:
         entity:
           filter:
