@@ -1,7 +1,7 @@
 blueprint:
-  name: Charger State Tracker
+  name: Charger Station State Tracker
   description: |
-    Track the state of battery chargers (Idle, Charging, Complete) based on power consumption.
+    Track the state of a battery charger station (Idle, Charging, Complete) based on power consumption.
     
     This blueprint monitors a power sensor and automatically transitions through states:
     - Idle: No charging activity (power below threshold)
@@ -21,7 +21,7 @@ blueprint:
               device_class: power
     status_input_select:
       name: Status Helper
-      description: "Input select helper to store the charger status (must have options: Idle, Charging, Complete)"
+      description: "Input select helper to store the charger station status (must have options: Idle, Charging, Complete)"
       selector:
         entity:
           filter:
@@ -91,7 +91,7 @@ blueprint:
     notification_message:
       name: Notification Message
       description: Message for the notification
-      default: "Battery chargers have finished charging"
+      default: "Battery charger(s) have finished charging"
       selector:
         text:
 
@@ -122,13 +122,18 @@ trigger:
 
 action:
   - choose:
-      # Charging Started
+      # Charging Started (from Idle or Complete)
       - conditions:
           - condition: trigger
             id: charging_started
-          - condition: state
-            entity_id: !input status_input_select
-            state: 'Idle'
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: !input status_input_select
+                state: 'Idle'
+              - condition: state
+                entity_id: !input status_input_select
+                state: 'Complete'
         sequence:
           - service: input_select.select_option
             target:
@@ -152,20 +157,21 @@ action:
           
           # Send notification if enabled
           - if:
-              - condition: template
-                value_template: "{{ enable_notifications }}"
-              - condition: template
-                value_template: "{{ notification_service != '' }}"
+              - "{{ enable_notifications }}"
+              - "{{ notification_service != '' }}"
             then:
               - service: "{{ notification_service }}"
                 data:
-                  title: !input notification_title
-                  message: !input notification_message
+                  title: "{{ notification_title }}"
+                  message: "{{ notification_message }}"
       
       # Reset to Idle
       - conditions:
           - condition: trigger
             id: reset_to_idle
+          - condition: state
+            entity_id: !input status_input_select
+            state: 'Complete'
         sequence:
           - service: input_select.select_option
             target:
