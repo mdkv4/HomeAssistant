@@ -98,6 +98,15 @@ blueprint:
 mode: queued
 max_exceeded: silent
 
+variables:
+  power_sensor: !input power_sensor
+  status_helper: !input status_input_select
+  threshold: !input power_threshold
+  enable_notifications: !input enable_notifications
+  notification_service: !input notification_service
+  notification_title: !input notification_title
+  notification_message: !input notification_message
+
 trigger:
   - platform: numeric_state
     entity_id: !input power_sensor
